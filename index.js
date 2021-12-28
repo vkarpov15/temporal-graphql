@@ -10,13 +10,21 @@ module.exports = function parseFile(fileName) {
 
   const exportedSymbols = checker.getExportsOfModule(checker.getSymbolAtLocation(sourceFile));
 
-  const typeDefMutations = [];
+  const mutations = [];
+  const queries = [];
   for (const symbol of exportedSymbols) {
     const fnName = symbol.getName();
     const exportedSymbolFlags = symbol.getFlags();
 
     if (exportedSymbolFlags !== ts.SymbolFlags.Function) {
-      // ignore anything that isn't a function
+      const initializer = symbol.valueDeclaration.initializer.getText();
+      
+      const signalMatch = initializer.match(/defineSignal(<.*>)?\('(.*)'\)$/);
+      if (signalMatch) {
+        const signalName = signalMatch[2];
+        mutations.push(`${signalName}(): ID`);
+      }
+
       continue;
     }
 
@@ -39,10 +47,10 @@ module.exports = function parseFile(fileName) {
       return `${fnName}(${parameters.join(', ')}): ${getTypeForString(returnType)}`;
     });
 
-    typeDefMutations.push(...calls);
+    mutations.push(...calls);
   }
 
-  return typeDefMutations;
+  return { queries, mutations };
 }
 
 function getTypeForString(str) {
