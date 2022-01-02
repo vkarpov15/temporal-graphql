@@ -11,6 +11,11 @@ describe('parseFile', function() {
 
   it('handles signals and queries', function() {
     const res = parseFile(`${__dirname}/data/signals-queries.ts`);
-    assert.deepEqual(res.mutations, ['unblock(): ID', 'unblockOrCancel(): ID']);
+    assert.deepEqual(res.mutations, ['unblockOrCancel(): ID', 'unblock(): ID', 'isBlocked(): Boolean']);
+  });
+
+  it('handles signals with args', function() {
+    const res = parseFile(`${__dirname}/data/updatable-timer.ts`);
+    assert.deepEqual(res.mutations, ['countdownWorkflow(): ID', 'setDeadline(arg0: Float): ID', 'timeLeft(): Float']);
   });
 });

@@ -21,8 +21,20 @@ module.exports = function parseFile(fileName) {
       
       const signalMatch = initializer.match(/defineSignal(<.*>)?\('(.*)'\)$/);
       if (signalMatch) {
+        let typeArgs = [];
+        if (symbol.valueDeclaration.initializer.typeArguments) {
+          typeArgs = symbol.valueDeclaration.initializer.typeArguments[0].elements.map(el => el.getText());
+        }
         const signalName = signalMatch[2];
-        mutations.push(`${signalName}(): ID`);
+        mutations.push(`${signalName}(${typeArgs.map((t, i) => `arg${i}: ${getTypeForString(t)}`).join(', ')}): ID`);
+      }
+
+      const queryMatch = initializer.match(/defineQuery(<.*>)?\('(.*)'\)$/);
+
+      if (queryMatch) {
+        const typeArgs = (symbol.valueDeclaration.initializer.typeArguments || []).map(arg => arg.getText());
+        const queryName = queryMatch[2];
+        mutations.push(`${queryName}(): ${getTypeForString(typeArgs[0])}`);
       }
 
       continue;
